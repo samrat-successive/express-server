@@ -1,5 +1,5 @@
 const express = require("express");
-const { validationResult } = require("express-validator");
+const { check, validationResult } = require('express-validator');
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
@@ -14,12 +14,29 @@ const User = require("../model/User");
  */
 
 router.post(
-    "/signup",
+    "/signup", [
+    check('name')
+        .not()
+        .isEmpty()
+        .withMessage('Name is required'),
+    check('email', 'Email is required')
+        .isEmail(),
+    check('password', 'Password is required')
+        .isLength({ min: 1 })
+],
     async (req, res) => {
-        const errors = validationResult(req);
+        const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
+            // Build your resulting errors however you want! String, object, whatever - it works!
+            let errorMessages = [];
+            errorMessages.push(msg)
+            return `[${param}]: ${msg}`;
+            // return `${location}[${param}]: ${msg}`;
+        };
+        const errors = validationResult(req).formatWith(errorFormatter);
+
         if (!errors.isEmpty()) {
             return res.status(400).json({
-                errors: errors.array()
+                message: errors.array()
             });
         }
         const {
@@ -75,13 +92,25 @@ router.post(
 );
 
 router.post(
-    "/login",
+    "/login", [
+    check('email', 'Email is required')
+        .isEmail(),
+    check('password', 'Password is required')
+        .isLength({ min: 1 })
+],
     async (req, res) => {
-        const errors = validationResult(req);
+        const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
+            // Build your resulting errors however you want! String, object, whatever - it works!
+            let errorMessages = [];
+            errorMessages.push(msg)
+            return `[${param}]: ${msg}`;
+            // return `${location}[${param}]: ${msg}`;
+        };
+        const errors = validationResult(req).formatWith(errorFormatter);
 
         if (!errors.isEmpty()) {
             return res.status(400).json({
-                errors: errors.array()
+                message: errors.array()
             });
         }
 
